@@ -9,6 +9,7 @@ app.listen(7777, () => {
 
 app.use('/test', (req,res)=>{
     res.send('Hi test');
+    
 })
 
 app.use('/hello', (req,res)=>{
