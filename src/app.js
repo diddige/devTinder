@@ -1,61 +1,57 @@
-// cjs modules
-const express = require('express');
-const {connectDB} = require('./config/database');
-const User = require('./models/user')
+const express = require("express");
+const cookieParser = require("cookie-parser");
+const connectDB = require("./config/database");
+const { User } = require("./models/user");
 
 const app = express();
+const { authRouter } = require("./routes/auth");
+const { profileRouter } = require("./routes/profile");
+const { requestRouter } = require("./routes/request");
+const { userRouter } = require("./routes/user");
 
-// middle ware to convert JSON to javascript object
-app.use(express.json())
+const PORT = 3000;
 
-app.post('/signup', async (req, res) => {
-    console.log(req.body)
-
-    const user = new User(req.body);
-    try{
-        await user.save();
-        res.send('User added Successfully')
-    }catch(err){
-        res.status(404).send('Error saving the user:' + err.message);
-    }
-})
-
-app.get('/user', async (req, res) => {
-    const email = req.body.email;
-    try{
-        console.log(email);
-        const user = await User.findOne({email: email});
-        console.log(user);
-        if(user.email){
-            res.status(200).send(user);
-        }else{
-            res.status(404).send('User not found');
-        }
-    }catch(err){
-        res.status(404).send('Error sending the email' + err.message);
-    }
-})
-
-app.get('/feed', async (req, res) => {
-    console.log('feed');
-    try{
-        const users = await User.find({});
-        console.log(users);
-        if(users.length > 0){
-            res.status(200).send(users);
-        }else{
-            res.status(404).send('User not found');
-        }
-    }catch(err){
-        res.status(404).send('Error sending the email' + err.message);
-    }
-})
-
-connectDB().then(() => {
-    console.log('Database connected Successfully');
-    app.listen(7777, () => {
-        console.log(`Server started successfully 7777...`)
+connectDB()
+  .then(() => {
+    console.log("Database connection established successfully");
+    app.listen(PORT, () => {
+      console.log("Hello");
     });
-}).catch(() => {
-    console.log('Database connection failed');
-})
+  })
+  .catch((err) => {
+    console.log("Database cannot be connected !!!");
+  });
+
+// middleware for json
+app.use(express.json());
+app.use(cookieParser());
+
+
+app.use("/", authRouter, profileRouter, requestRouter, userRouter);
+
+//feed
+app.get("/feed", async (req, res) => {
+  try {
+    const feed = await User.find().exec();
+    if (!feed) {
+      res.status(404).send("Database is empty");
+    } else {
+      res.send(feed);
+    }
+  } catch (error) {
+    console.log(`Database failed to get feed - ERROR : ${error.message}`);
+    res.send(`Internal Error, Please try again : ${error.message}`);
+  }
+});
+
+app.use((req, res) => {
+  res.send("Hello from server");
+});
+
+// handling error scenarios
+app.use("/", (err, req, res, next) => {
+  if (err) {
+    console.log(err);
+    res.status(500).send("Something went wrong");
+  }
+});

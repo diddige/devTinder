@@ -1,11 +1,9 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-const connectionURL = 'mongodb+srv://namastedev:NKfQck3IkBjxdPyb@namastenode.4osjd.mongodb.net/devTinder';
+const connectDB = async () => {
+  await mongoose.connect(
+    "",
+  );
+};
 
-const connectDB = async function(){
-    await mongoose.connect(connectionURL);
-}
-
-module.exports = {
-    connectDB
-}
+module.exports = connectDB;
